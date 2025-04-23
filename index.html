@@ -12,6 +12,7 @@
             --light-bg: #ffffff;
             --gray: #f4f4f9;
         }
+        
 
         body {
             font-family: Arial, sans-serif;
@@ -97,10 +98,13 @@
         .main-content {
             padding: 20px;
         }
-
-        .shift-form,
         .shift-report,
+        .shift-form,
         .monthly-report {
+                    position: relative;
+                    overflow-x: auto;
+                    
+                    max-width: 100%;
             background-color: var(--light-bg);
             margin-bottom: 20px;
             padding: 15px;
@@ -109,12 +113,14 @@
         }
 
         table {
+                    max-width: 100%;
             width: 100%;
             border-collapse: collapse;
         }
 
         table, th, td {
-            border: 1px solid #ddd;
+            padding: 1rem;
+            border: 1px solid #eee;
         }
 
         th, td {
@@ -188,13 +194,13 @@
             <input type="text" id="shift-start" placeholder="Выберите дату и время">
             <input type="text" id="shift-end" placeholder="Выберите дату и время">
             <div>
-                <input type="checkbox" id="break-30min"> <span id="break-30">30 минут перерыва</span>
-                <input type="checkbox" id="break-15min-1"> <span id="break-15-1">15 минут перерыва</span>
-                <input type="checkbox" id="break-15min-2"> <span id="break-15-2">15 минут перерыва</span>
+                <input type="checkbox" id="break-30min"> <span id="break-30">30 минут</span>
+                <input type="checkbox" id="break-15min-1"> <span id="break-15-1">15 минут</span>
+                <input type="checkbox" id="break-15min-2"> <span id="break-15-2">15 минут</span>
             </div>
             <button id="add-shift-btn" class="disabled" disabled onclick="addShift()">Добавить</button>
         </div>
-
+        
         <div class="shift-report">
             <h2 id="shift-report-title">Отчет за смену</h2>
             <table id="shift-table">
@@ -417,9 +423,9 @@
                 empnum: "Номер сотрудника:",
                 language: "Язык:",
                 chooseDate: "Выберите дату и время",
-                break30: "30 минут перерыва",
-                break15_1: "15 минут перерыва",
-                break15_2: "15 минут перерыва",
+                break30: "30 минут",
+                break15_1: "15 минут",
+                break15_2: "15 минут",
                 enterName: "Введите имя сотрудника",
                 enterEmpNum: "Введите номер сотрудника"
             };
@@ -444,9 +450,9 @@
                 empnum: "Employee Number:",
                 language: "Language:",
                 chooseDate: "Choose Date and Time",
-                break30: "30-minute break",
-                break15_1: "15-minute break",
-                break15_2: "15-minute break",
+                break30: "30-minute",
+                break15_1: "15-minute",
+                break15_2: "15-minute",
                 enterName: "Enter Employee Name",
                 enterEmpNum: "Enter Employee Number"
             };
@@ -488,6 +494,7 @@
     
 </body>
 </html>
+
 
 
 
