@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчет за смену</title>
+    
+    <style>
+        :root {
+            --main-green: #006400;
+            --main-orange: #ff6f00;
+            --light-bg: #ffffff;
+            --gray: #f4f4f9;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--gray);
+        }
+
+        header {
+            background-color: var(--main-green);
+            color: white;
+            padding: 10px;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .settings-btn {
+            background-color: var(--main-orange);
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .settings-menu {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            display: none;
+            z-index: 1000;
+            width: 300px;
+            border-radius: 10px;
+        }
+
+        .settings-menu .settings-option {
+            margin-bottom: 15px;
+        }
+
+        .settings-option label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .settings-option input,
+        .settings-option select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            background-color: var(--main-orange);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button.disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(.disabled) {
+            background-color: #e65c00;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .shift-form,
+        .shift-report,
+        .monthly-report {
+            background-color: var(--light-bg);
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f1f1f1;
+        }
+
+        .settings-option button {
+            margin-top: 10px;
+        }
+
+        #delete-last-btn {
+            margin-top: 15px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1 id="main-title">Отчет за смену</h1>
+            <button class="settings-btn" onclick="toggleSettingsMenu()">⚙️</button>
+        </div>
+    </header>
+
+    <div class="settings-menu" id="settings-menu">
+        <div class="settings-option">
+            <label id="rate-label" for="work-hour-rate">Зарплата в час (р.):</label>
+            <input type="number" id="work-hour-rate" value="275">
+        </div>
+        <div class="settings-option">
+            <label id="name-label" for="name">Имя:</label>
+            <input type="text" id="name" placeholder="Введите ваше имя">
+        </div>
+        <div class="settings-option">
+            <label id="empnum-label" for="employee-number">Номер сотрудника:</label>
+            <input type="text" id="employee-number" placeholder="Введите номер сотрудника">
+        </div>
+        <div class="settings-option">
+            <label for="language" id="language-label">Язык:</label>
+            <select id="language" onchange="switchLanguage()">
+                <option value="ru">Русский</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+        <div class="settings-option">
+            <button onclick="clearReport()" id="clear-report-btn">Очистить отчет</button>
+            <button onclick="saveSettings()" id="save-settings-btn">Сохранить настройки</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="shift-form">
+            <h2 id="add-shift-title">Добавить смену</h2>
+            <input type="text" id="shift-start" placeholder="Выберите дату и время">
+            <input type="text" id="shift-end" placeholder="Выберите дату и время">
+            <div>
+                <input type="checkbox" id="break-30min"> <span id="break-30">30 минут перерыва</span>
+                <input type="checkbox" id="break-15min-1"> <span id="break-15-1">15 минут перерыва</span>
+                <input type="checkbox" id="break-15min-2"> <span id="break-15-2">15 минут перерыва</span>
+            </div>
+            <button id="add-shift-btn" class="disabled" disabled onclick="addShift()">Добавить</button>
+        </div>
+
+        <div class="shift-report">
+            <h2 id="shift-report-title">Отчет за смену</h2>
+            <table id="shift-table">
+                <thead>
+                    <tr>
+                        <th id="date-th">Дата</th>
+                        <th id="start-th">Начало</th>
+                        <th id="end-th">Конец</th>
+                        <th id="breaks-th">Перерывы</th>
+                        <th id="hours-th">Часы</th>
+                        <th id="salary-th">Зарплата</th>
+                    </tr>
+                </thead>
+                <tbody id="shift-body"></tbody>
+            </table>
+            <button onclick="deleteLastShift()" id="delete-last-btn">Удалить последнюю смену</button>
+        </div>
+
+        <div class="monthly-report">
+            <h2 id="monthly-title">Краткий отчет за месяц</h2>
+            <p id="monthly-days">Отработано дней: <span id="worked-days">0</span></p>
+            <p id="monthly-summary">Отработано часов: <span id="worked-hours">0</span></p>
+            <p id="monthly-salary">Зарплата: <span id="monthly-salary-amount">0</span> ₽</p>
+            <p id="monthly-salary-tax">Зарплата с налогом (-13%): <span id="salary-taxed">0</span> ₽</p>
+            <button id="copy-report-btn">Скопировать краткий отчет</button>
+        </div>
+    </div>
+
+    <script>
+        let workHourRate = 275;
+        let shifts = [];
+        let employeeName = '';
+        let employeeNumber = '';
+        let currentLang = 'ru';
+    
+        function toggleSettingsMenu() {
+            const menu = document.getElementById('settings-menu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+    
+        function clearReport() {
+            if (confirm(currentLang === 'ru' ? 'Вы уверены, что хотите очистить отчет?' : 'Are you sure you want to clear the report?')) {
+                shifts = [];
+                updateShiftTable();
+                updateMonthlySummary();
+                saveToLocalStorage();
+            }
+        }
+    
+        function saveSettings() {
+            workHourRate = parseFloat(document.getElementById('work-hour-rate').value) || 275;
+            employeeName = document.getElementById('name').value;
+            employeeNumber = document.getElementById('employee-number').value;
+            saveToLocalStorage();
+            alert(currentLang === 'ru' ? "Настройки сохранены!" : "Settings saved!");
+            toggleSettingsMenu();
+        }
+    
+        function addShift() {
+            const startTime = new Date(document.getElementById('shift-start').value);
+            const endTime = new Date(document.getElementById('shift-end').value);
+            const breaks = calculateBreaks();
+            const hoursWorked = (endTime - startTime) / (1000 * 60 * 60) - breaks;
+            const shiftSalary = hoursWorked * workHourRate;
+    
+            if (hoursWorked <= 0 || isNaN(hoursWorked)) return alert(currentLang === 'ru' ? "Некорректное время!" : "Invalid time!");
+    
+            shifts.push({
+                date: startTime.toLocaleDateString(),
+                start: startTime.toLocaleTimeString(),
+                end: endTime.toLocaleTimeString(),
+                breaks: breaks,
+                hoursWorked: hoursWorked.toFixed(2),
+                salary: shiftSalary.toFixed(2)
+            });
+    
+            updateShiftTable();
+            updateMonthlySummary();
+            saveToLocalStorage();
+    
+            document.getElementById('add-shift-btn').disabled = true;
+            document.getElementById('add-shift-btn').classList.add('disabled');
+        }
+    
+        function calculateBreaks() {
+            let breaks = 0;
+            if (document.getElementById('break-30min').checked) breaks += 0.5;
+            if (document.getElementById('break-15min-1').checked) breaks += 0.25;
+            if (document.getElementById('break-15min-2').checked) breaks += 0.25;
+            return breaks;
+        }
+    
+        function updateShiftTable() {
+            const shiftBody = document.getElementById('shift-body');
+            shiftBody.innerHTML = '';
+            shifts.forEach(shift => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${shift.date}</td>
+                    <td>${shift.start}</td>
+                    <td>${shift.end}</td>
+                    <td>${shift.breaks * 60} мин</td>
+                    <td>${shift.hoursWorked}</td>
+                    <td>${shift.salary} ₽</td>
+                `;
+                shiftBody.appendChild(row);
+            });
+        }
+    
+        function deleteLastShift() {
+            if (confirm(currentLang === 'ru' ? 'Вы уверены, что хотите удалить последнюю смену?' : 'Are you sure you want to delete the last shift?')) {
+                shifts.pop();
+                updateShiftTable();
+                updateMonthlySummary();
+                saveToLocalStorage();
+            }
+        }
+    
+        function updateMonthlySummary() {
+            const totalHours = shifts.reduce((sum, shift) => sum + parseFloat(shift.hoursWorked), 0);
+            const totalSalary = shifts.reduce((sum, shift) => sum + parseFloat(shift.salary), 0);
+            const salaryWithTax = totalSalary * 0.87;
+    
+            document.getElementById('worked-days').textContent = shifts.length;
+            document.getElementById('worked-hours').textContent = totalHours.toFixed(2);
+            document.getElementById('monthly-salary-amount').textContent = totalSalary.toFixed(2);
+            document.getElementById('salary-taxed').textContent = salaryWithTax.toFixed(2);
+        }
+    
+        function generateMonthlyReport() {
+            const summary = `${employeeName} (${employeeNumber})
+    ${currentLang === 'ru' ? 'Отработанных дней' : 'Days worked'} - ${shifts.length}
+    ${currentLang === 'ru' ? 'Отработанных часов' : 'Total hours'} - ${document.getElementById('worked-hours').textContent}
+    ${currentLang === 'ru' ? 'Зарплата' : 'Salary'} - ${document.getElementById('monthly-salary-amount').textContent} ₽
+    ${currentLang === 'ru' ? 'Зарплата с налогом (-13%)' : 'Salary after tax (13%)'} - ${document.getElementById('salary-taxed').textContent} ₽`;
+    
+            navigator.clipboard.writeText(summary).then(() => {
+                alert(currentLang === 'ru' ? "Отчет скопирован!" : "Report copied!");
+            });
+        }
+    
+        function saveToLocalStorage() {
+            const data = {
+                workHourRate,
+                employeeName,
+                employeeNumber,
+                shifts
+            };
+            localStorage.setItem('shiftAppData', JSON.stringify(data));
+        }
+    
+        function loadFromLocalStorage() {
+            const data = JSON.parse(localStorage.getItem('shiftAppData'));
+            if (data) {
+                workHourRate = data.workHourRate || 275;
+                employeeName = data.employeeName || '';
+                employeeNumber = data.employeeNumber || '';
+                shifts = data.shifts || [];
+    
+                document.getElementById('work-hour-rate').value = workHourRate;
+                document.getElementById('name').value = employeeName;
+                document.getElementById('employee-number').value = employeeNumber;
+    
+                updateShiftTable();
+                updateMonthlySummary();
+            }
+        }
+    
+        document.getElementById('copy-report-btn').addEventListener('click', generateMonthlyReport);
+    
+        flatpickr("#shift-start", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            locale: "ru",
+            time_24hr: true
+        });
+    
+        flatpickr("#shift-end", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            locale: "ru",
+            time_24hr: true
+        });
+    
+        document.getElementById('shift-start').addEventListener('change', checkShiftInputs);
+        document.getElementById('shift-end').addEventListener('change', checkShiftInputs);
+    
+        function checkShiftInputs() {
+            const start = document.getElementById('shift-start').value;
+            const end = document.getElementById('shift-end').value;
+            const btn = document.getElementById('add-shift-btn');
+            if (start && end) {
+                btn.disabled = false;
+                btn.classList.remove('disabled');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('disabled');
+            }
+        }
+    
+        function switchLanguage() {
+            currentLang = document.getElementById('language').value;
+            const ru = {
+                main: "Отчет за смену",
+                add: "Добавить смену",
+                shift: "Отчет за смену",
+                monthly: "Краткий отчет за месяц",
+                date: "Дата",
+                start: "Начало",
+                end: "Конец",
+                breaks: "Перерывы",
+                hours: "Часы",
+                salary: "Зарплата",
+                delete: "Удалить последнюю смену",
+                copy: "Скопировать краткий отчет",
+                rate: "Зарплата в час (р.):",
+                clear: "Очистить отчет",
+                save: "Сохранить настройки",
+                name: "Имя:",
+                empnum: "Номер сотрудника:",
+                language: "Язык:",
+                chooseDate: "Выберите дату и время",
+                break30: "30 минут перерыва",
+                break15_1: "15 минут перерыва",
+                break15_2: "15 минут перерыва",
+                enterName: "Введите имя сотрудника",
+                enterEmpNum: "Введите номер сотрудника"
+            };
+    
+            const en = {
+                main: "Shift Report",
+                add: "Add Shift",
+                shift: "Shift Report",
+                monthly: "Monthly Report",
+                date: "Date",
+                start: "Start",
+                end: "End",
+                breaks: "Breaks",
+                hours: "Hours",
+                salary: "Salary",
+                delete: "Delete Last Shift",
+                copy: "Copy Monthly Report",
+                rate: "Hourly Rate (руб.):",
+                clear: "Clear Report",
+                save: "Save Settings",
+                name: "Name:",
+                empnum: "Employee Number:",
+                language: "Language:",
+                chooseDate: "Choose Date and Time",
+                break30: "30-minute break",
+                break15_1: "15-minute break",
+                break15_2: "15-minute break",
+                enterName: "Enter Employee Name",
+                enterEmpNum: "Enter Employee Number"
+            };
+    
+            const lang = currentLang === 'ru' ? ru : en;
+    
+            document.getElementById('main-title').textContent = lang.main;
+            document.getElementById('add-shift-title').textContent = lang.add;
+            document.getElementById('shift-report-title').textContent = lang.shift;
+            document.getElementById('monthly-title').textContent = lang.monthly;
+            document.getElementById('date-th').textContent = lang.date;
+            document.getElementById('start-th').textContent = lang.start;
+            document.getElementById('end-th').textContent = lang.end;
+            document.getElementById('breaks-th').textContent = lang.breaks;
+            document.getElementById('hours-th').textContent = lang.hours;
+            document.getElementById('salary-th').textContent = lang.salary;
+            document.getElementById('delete-last-btn').textContent = lang.delete;
+            document.getElementById('copy-report-btn').textContent = lang.copy;
+            document.getElementById('rate-label').textContent = lang.rate;
+            document.getElementById('clear-report-btn').textContent = lang.clear;
+            document.getElementById('save-settings-btn').textContent = lang.save;
+            document.getElementById('name-label').textContent = lang.name;
+            document.getElementById('empnum-label').textContent = lang.empnum;
+            document.getElementById('language-label').textContent = lang.language;
+            document.getElementById('shift-start').setAttribute('placeholder', lang.chooseDate);
+            document.getElementById('shift-end').setAttribute('placeholder', lang.chooseDate);
+            document.getElementById('break-30min').nextElementSibling.textContent = lang.break30;
+            document.getElementById('break-15min-1').nextElementSibling.textContent = lang.break15_1;
+            document.getElementById('break-15min-2').nextElementSibling.textContent = lang.break15_2;
+    
+            document.getElementById('name').setAttribute('placeholder', lang.enterName);
+            document.getElementById('employee-number').setAttribute('placeholder', lang.enterEmpNum);
+        }
+    
+        // Загружаем язык и данные при старте
+        switchLanguage();
+        loadFromLocalStorage();
+    </script>
+    
+</body>
+</html>
+
